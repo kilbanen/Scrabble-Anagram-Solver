@@ -66,13 +66,16 @@ int main(int argc, char *argv[]){
     int unique_tiles = 0;
     char* letters = argv[1];
     while(*letters != 0) {
-      if(tile_amount[*letters - 'A'] == 0)
-        unique_tiles++;
-      tile_amount[*letters - 'A']++;
+        if(*letters >= 'a' && *letters <= 'z')
+          *letters -= 32;
+        if(*letters >= 'A' && *letters <= 'Z'){
+        if(tile_amount[*letters - 'A'] == 0)
+          unique_tiles++;
+        tile_amount[*letters - 'A']++;
+        size++;
+      }
       letters++;
-      size++;
     }
-    letters -= size;
     struct Tile tiles[unique_tiles];
     char buffer[size];
     int tile_index = 0;
