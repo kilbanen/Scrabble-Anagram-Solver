@@ -8,7 +8,7 @@ struct Node {
 
 struct Tile {
   char letter;
-  int played;
+  int amount;
 };
 
 struct Node* get_new_node(){
@@ -45,13 +45,13 @@ void load_words(char* filename, struct Node* head){
 void get_anagrams(struct Node* trie_head, struct Tile letters[], int size, char buffer[], int buffer_pointer){
   struct Node* current_node;
   for(int i = 0; i < size; i++){
-    if(trie_head->next[letters[i].letter - 'A'] != NULL && letters[i].played != 1){
+    if(trie_head->next[letters[i].letter - 'A'] != NULL && letters[i].amount > 0){
       current_node = trie_head->next[letters[i].letter - 'A'];
-      letters[i].played = 1;
+      letters[i].amount--;
       buffer[buffer_pointer] = letters[i].letter;
       if(current_node->end_word) printf("%s\n", buffer);
       get_anagrams(current_node, letters, size, buffer, buffer_pointer + 1);
-      letters[i].played = 0;
+      letters[i].amount++;
       buffer[buffer_pointer] = 0;
     }
   }
@@ -61,22 +61,31 @@ int main(int argc, char *argv[]){
   if(argc != 2)
     printf("One argument expected.\n");
   else{
+    int tile_amount[26] = {0};
     int size = 0;
+    int unique_tiles = 0;
     char* letters = argv[1];
     while(*letters != 0) {
-      size++;
+      if(tile_amount[*letters - 'A'] == 0)
+        unique_tiles++;
+      tile_amount[*letters - 'A']++;
       letters++;
+      size++;
     }
     letters -= size;
-    struct Tile tiles[size];
+    struct Tile tiles[unique_tiles];
     char buffer[size];
-    for(int i = 0; i < size; i++){
-      tiles[i].letter = letters[i];
-      tiles[i].played = 0;
+    int tile_index = 0;
+    for(int i = 0; i < 26; i++){
+      if(tile_amount[i] > 0){
+        tiles[tile_index].letter = i + 'A';
+        tiles[tile_index].amount = tile_amount[i];
+        tile_index++;
+      }
     }
     struct Node* head = malloc(sizeof(struct Node));
     load_words("sowpods.txt", head);
-    get_anagrams(head, tiles, size, buffer, 0);
+    get_anagrams(head, tiles, unique_tiles, buffer, 0);
   }
   return 0;
 }
