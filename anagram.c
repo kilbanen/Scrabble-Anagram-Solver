@@ -44,15 +44,32 @@ void load_words(char* filename, struct Node* head){
 
 void get_anagrams(struct Node* trie_head, struct Tile letters[], int size, char buffer[], int buffer_pointer){
   struct Node* current_node;
+  char current_letter;
   for(int i = 0; i < size; i++){
-    if(trie_head->next[letters[i].letter - 'A'] != NULL && letters[i].amount > 0){
-      current_node = trie_head->next[letters[i].letter - 'A'];
-      letters[i].amount--;
-      buffer[buffer_pointer] = letters[i].letter;
-      if(current_node->end_word) printf("%s\n", buffer);
-      get_anagrams(current_node, letters, size, buffer, buffer_pointer + 1);
-      letters[i].amount++;
-      buffer[buffer_pointer] = 0;
+    current_letter = letters[i].letter;
+    if(current_letter != '?'){
+      if(trie_head->next[current_letter - 'A'] != NULL && letters[i].amount > 0){
+        current_node = trie_head->next[current_letter - 'A'];
+        letters[i].amount--;
+        buffer[buffer_pointer] = current_letter;
+        if(current_node->end_word) printf("%s\n", buffer);
+        get_anagrams(current_node, letters, size, buffer, buffer_pointer + 1);
+        letters[i].amount++;
+        buffer[buffer_pointer] = 0;
+      }
+    }
+    else{
+      for(current_letter = 'A'; current_letter <= 'Z'; current_letter++){
+        if(trie_head->next[current_letter - 'A'] != NULL && letters[i].amount > 0){
+          current_node = trie_head->next[current_letter - 'A'];
+          letters[i].amount--;
+          buffer[buffer_pointer] = current_letter;
+          if(current_node->end_word) printf("%s\n", buffer);
+          get_anagrams(current_node, letters, size, buffer, buffer_pointer + 1);
+          letters[i].amount++;
+          buffer[buffer_pointer] = 0;
+        }
+      }
     }
   }
 }
@@ -61,27 +78,37 @@ int main(int argc, char *argv[]){
   if(argc != 2)
     printf("One argument expected.\n");
   else{
-    int tile_amount[26] = {0};
+    int tile_amount[27] = {0};
     int size = 0;
     int unique_tiles = 0;
+    int tile_index = 0;
     char* letters = argv[1];
     while(*letters != 0) {
-        if(*letters >= 'a' && *letters <= 'z')
-          *letters -= 32;
-        if(*letters >= 'A' && *letters <= 'Z'){
-        if(tile_amount[*letters - 'A'] == 0)
+      if(*letters >= 'a' && *letters <= 'z')
+        tile_index = *letters - 'a';
+      else if(*letters >= 'A' && *letters <= 'Z')
+        tile_index = *letters - 'A';
+      else if(*letters == '?')
+        tile_index = 26;
+      else
+        tile_index = 27;
+      if(tile_index != 27){
+        if(tile_amount[tile_index] == 0)
           unique_tiles++;
-        tile_amount[*letters - 'A']++;
+        tile_amount[tile_index]++;
         size++;
       }
       letters++;
     }
     struct Tile tiles[unique_tiles];
     char buffer[size];
-    int tile_index = 0;
-    for(int i = 0; i < 26; i++){
+    tile_index = 0;
+    for(int i = 0; i < 27; i++){
       if(tile_amount[i] > 0){
-        tiles[tile_index].letter = i + 'A';
+        if(i == 26)
+          tiles[tile_index].letter = '?';
+        else
+          tiles[tile_index].letter = i + 'A';
         tiles[tile_index].amount = tile_amount[i];
         tile_index++;
       }
