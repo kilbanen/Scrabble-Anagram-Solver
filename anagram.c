@@ -42,34 +42,47 @@ void load_words(char* filename, struct Node* head){
   }
 }
 
-void get_anagrams(struct Node* trie_head, struct Tile letters[], int size, char buffer[], int buffer_pointer){
+void add_tile_to_buffer(struct Tile* tile, char* end_of_buffer, char current_letter){
+  tile->amount--;
+  *end_of_buffer = current_letter;
+}
+
+void remove_tile_from_buffer(struct Tile* tile, char* buffer){
+  tile->amount++;
+  *buffer = 0;
+}
+
+void get_anagrams(struct Node* root, struct Tile tiles[], int size, char* buffer, int buffer_pointer);
+
+void traverse_trie(struct Node* root, struct Tile tiles[], int tile_pointer, char* buffer, int buffer_pointer, char letter, int size){
+  struct Node* current_node = root->next[letter - 'A'];
+  if(current_node != NULL){
+    add_tile_to_buffer(tiles + tile_pointer, buffer + buffer_pointer, letter);
+    if(current_node->end_word) printf("%s\n", buffer);
+    get_anagrams(current_node, tiles, size, buffer, buffer_pointer + 1);
+    remove_tile_from_buffer(tiles + tile_pointer, buffer + buffer_pointer);
+  }
+}
+
+void get_anagrams(struct Node* root, struct Tile tiles[], int size, char* buffer, int buffer_pointer){
   struct Node* current_node;
+  struct Tile* tile;
   char current_letter;
-  for(int i = 0; i < size; i++){
-    current_letter = letters[i].letter;
+  char start_letter;
+  char end_letter;
+  for(int tile_pointer = 0; tile_pointer < size; tile_pointer++){
+    current_letter = tiles[tile_pointer].letter;
     if(current_letter != '?'){
-      if(trie_head->next[current_letter - 'A'] != NULL && letters[i].amount > 0){
-        current_node = trie_head->next[current_letter - 'A'];
-        letters[i].amount--;
-        buffer[buffer_pointer] = current_letter;
-        if(current_node->end_word) printf("%s\n", buffer);
-        get_anagrams(current_node, letters, size, buffer, buffer_pointer + 1);
-        letters[i].amount++;
-        buffer[buffer_pointer] = 0;
-      }
+      start_letter = current_letter;
+      end_letter = current_letter;
     }
     else{
-      for(current_letter = 'A'; current_letter <= 'Z'; current_letter++){
-        if(trie_head->next[current_letter - 'A'] != NULL && letters[i].amount > 0){
-          current_node = trie_head->next[current_letter - 'A'];
-          letters[i].amount--;
-          buffer[buffer_pointer] = current_letter;
-          if(current_node->end_word) printf("%s\n", buffer);
-          get_anagrams(current_node, letters, size, buffer, buffer_pointer + 1);
-          letters[i].amount++;
-          buffer[buffer_pointer] = 0;
-        }
-      }
+      start_letter = 'A';
+      end_letter = 'Z';
+    }
+    for(current_letter = start_letter; current_letter <= end_letter; current_letter++){
+      if(tiles[tile_pointer].amount > 0)
+        traverse_trie(root, tiles, tile_pointer, buffer, buffer_pointer, current_letter, size);
     }
   }
 }
