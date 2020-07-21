@@ -1,9 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define NUMBER_OF_LETTERS 26
+#define NUMBER_OF_TILES 27
+#define MAX_WORD_SIZE 60
+#define INVALID_CHARACTER -1
+#define LETTER_CASE_DIFFERENCE 32
+
 struct Node {
   int end_word;
-  struct Node* next[26];
+  struct Node* next[NUMBER_OF_LETTERS];
 };
 
 struct Tile {
@@ -15,7 +21,7 @@ struct Node* get_new_node(){
   struct Node* node = malloc(sizeof(struct Node));
   node->end_word = 0;
 
-  for(int i = 0; i < 26; i++)
+  for(int i = 0; i < NUMBER_OF_LETTERS; i++)
     node->next[i] = NULL;
 
   return node;
@@ -36,8 +42,8 @@ void insert(struct Node* head, char* word){
 void load_words(char* filename, struct Node* head){
   FILE* wordlist = fopen(filename, "r");
   while(1){
-    char* word = malloc(sizeof(char) * 60);
-    if(fgets(word, 60, wordlist) == NULL) break;
+    char* word = malloc(sizeof(char) * MAX_WORD_SIZE);
+    if(fgets(word, MAX_WORD_SIZE, wordlist) == NULL) break;
     insert(head, word);
   }
 }
@@ -53,18 +59,18 @@ void remove_tile_from_buffer(struct Tile* tile, char* buffer){
 }
 
 struct Tile* get_tiles(char* letters){
-  static struct Tile tiles[27];
+  static struct Tile tiles[NUMBER_OF_TILES];
   int tile_index;
   while(*letters != 0) {
     if(*letters >= 'a' && *letters <= 'z')
-      *letters -= 32;
+      *letters -= LETTER_CASE_DIFFERENCE;
     if(*letters >= 'A' && *letters <= 'Z')
       tile_index = *letters - 'A';
     else if(*letters == '?')
       tile_index = 26;
     else
-      tile_index = -1;
-    if(tile_index != -1){
+      tile_index = INVALID_CHARACTER;
+    if(tile_index != INVALID_CHARACTER){
       tiles[tile_index].letter = *letters;
       tiles[tile_index].amount++;
     }
@@ -91,7 +97,7 @@ void get_anagrams(struct Node* root, struct Tile tiles[], char* buffer, int buff
   char current_letter;
   char start_letter;
   char end_letter;
-  for(int tile_pointer = 0; tile_pointer < 27; tile_pointer++){
+  for(int tile_pointer = 0; tile_pointer < NUMBER_OF_TILES; tile_pointer++){
     current_letter = tiles[tile_pointer].letter;
     if(current_letter != '?'){
       start_letter = current_letter;
@@ -114,7 +120,7 @@ int main(int argc, char *argv[]){
   else{
     char* letters = argv[1];
     struct Tile* tiles = get_tiles(letters);
-    char* buffer = malloc(sizeof(char) * 60);
+    char* buffer = malloc(sizeof(char) * MAX_WORD_SIZE);
     struct Node* root = malloc(sizeof(struct Node));
     load_words("sowpods.txt", root);
     get_anagrams(root, tiles, buffer, 0);
