@@ -52,6 +52,27 @@ void remove_tile_from_buffer(struct Tile* tile, char* buffer){
   *buffer = 0;
 }
 
+struct Tile* get_tiles(char* letters){
+  static struct Tile tiles[27];
+  int tile_index;
+  while(*letters != 0) {
+    if(*letters >= 'a' && *letters <= 'z')
+      *letters -= 32;
+    if(*letters >= 'A' && *letters <= 'Z')
+      tile_index = *letters - 'A';
+    else if(*letters == '?')
+      tile_index = 26;
+    else
+      tile_index = -1;
+    if(tile_index != -1){
+      tiles[tile_index].letter = *letters;
+      tiles[tile_index].amount++;
+    }
+    letters++;
+  }
+  return tiles;
+}
+
 void get_anagrams(struct Node* root, struct Tile tiles[], char* buffer, int buffer_pointer);
 
 void traverse_trie(struct Node* root, struct Tile tiles[], int tile_pointer, char* buffer, int buffer_pointer, char letter){
@@ -91,34 +112,11 @@ int main(int argc, char *argv[]){
   if(argc != 2)
     printf("One argument expected.\n");
   else{
-    int tile_amount[27] = {0};
-    int size = 0;
-    int unique_tiles = 0;
-    int tile_index = 0;
     char* letters = argv[1];
-    struct Tile tiles[27];
-    for(int i = 0; i < 27; i++)
-      tiles[i].amount = 0;
-    while(*letters != 0) {
-      if(*letters >= 'a' && *letters <= 'z'){
-        *letters -= 32;
-        tile_index = *letters - 'A';
-      }
-      else if(*letters >= 'A' && *letters <= 'Z')
-        tile_index = *letters - 'A';
-      else if(*letters == '?')
-        tile_index = 26;
-      else
-        tile_index = 27;
-      if(tile_index != 27){
-        tiles[tile_index].letter = *letters;
-        tiles[tile_index].amount++;
-      }
-      letters++;
-    }
-    char* buffer = malloc(sizeof(char) * 27);
+    struct Tile* tiles = get_tiles(letters);
+    char* buffer = malloc(sizeof(char) * 60);
     struct Node* root = malloc(sizeof(struct Node));
-    load_words("sowpods.txt", head);
+    load_words("sowpods.txt", root);
     get_anagrams(root, tiles, buffer, 0);
   }
   return 0;
