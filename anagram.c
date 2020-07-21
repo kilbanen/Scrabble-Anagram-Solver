@@ -52,25 +52,25 @@ void remove_tile_from_buffer(struct Tile* tile, char* buffer){
   *buffer = 0;
 }
 
-void get_anagrams(struct Node* root, struct Tile tiles[], int size, char* buffer, int buffer_pointer);
+void get_anagrams(struct Node* root, struct Tile tiles[], char* buffer, int buffer_pointer);
 
-void traverse_trie(struct Node* root, struct Tile tiles[], int tile_pointer, char* buffer, int buffer_pointer, char letter, int size){
+void traverse_trie(struct Node* root, struct Tile tiles[], int tile_pointer, char* buffer, int buffer_pointer, char letter){
   struct Node* current_node = root->next[letter - 'A'];
   if(current_node != NULL){
     add_tile_to_buffer(tiles + tile_pointer, buffer + buffer_pointer, letter);
     if(current_node->end_word) printf("%s\n", buffer);
-    get_anagrams(current_node, tiles, size, buffer, buffer_pointer + 1);
+    get_anagrams(current_node, tiles, buffer, buffer_pointer + 1);
     remove_tile_from_buffer(tiles + tile_pointer, buffer + buffer_pointer);
   }
 }
 
-void get_anagrams(struct Node* root, struct Tile tiles[], int size, char* buffer, int buffer_pointer){
+void get_anagrams(struct Node* root, struct Tile tiles[], char* buffer, int buffer_pointer){
   struct Node* current_node;
   struct Tile* tile;
   char current_letter;
   char start_letter;
   char end_letter;
-  for(int tile_pointer = 0; tile_pointer < size; tile_pointer++){
+  for(int tile_pointer = 0; tile_pointer < 27; tile_pointer++){
     current_letter = tiles[tile_pointer].letter;
     if(current_letter != '?'){
       start_letter = current_letter;
@@ -82,7 +82,7 @@ void get_anagrams(struct Node* root, struct Tile tiles[], int size, char* buffer
     }
     for(current_letter = start_letter; current_letter <= end_letter; current_letter++){
       if(tiles[tile_pointer].amount > 0)
-        traverse_trie(root, tiles, tile_pointer, buffer, buffer_pointer, current_letter, size);
+        traverse_trie(root, tiles, tile_pointer, buffer, buffer_pointer, current_letter);
     }
   }
 }
@@ -96,9 +96,14 @@ int main(int argc, char *argv[]){
     int unique_tiles = 0;
     int tile_index = 0;
     char* letters = argv[1];
+    struct Tile tiles[27];
+    for(int i = 0; i < 27; i++)
+      tiles[i].amount = 0;
     while(*letters != 0) {
-      if(*letters >= 'a' && *letters <= 'z')
-        tile_index = *letters - 'a';
+      if(*letters >= 'a' && *letters <= 'z'){
+        *letters -= 32;
+        tile_index = *letters - 'A';
+      }
       else if(*letters >= 'A' && *letters <= 'Z')
         tile_index = *letters - 'A';
       else if(*letters == '?')
@@ -106,29 +111,15 @@ int main(int argc, char *argv[]){
       else
         tile_index = 27;
       if(tile_index != 27){
-        if(tile_amount[tile_index] == 0)
-          unique_tiles++;
-        tile_amount[tile_index]++;
-        size++;
+        tiles[tile_index].letter = *letters;
+        tiles[tile_index].amount++;
       }
       letters++;
     }
-    struct Tile tiles[unique_tiles];
-    char buffer[size];
-    tile_index = 0;
-    for(int i = 0; i < 27; i++){
-      if(tile_amount[i] > 0){
-        if(i == 26)
-          tiles[tile_index].letter = '?';
-        else
-          tiles[tile_index].letter = i + 'A';
-        tiles[tile_index].amount = tile_amount[i];
-        tile_index++;
-      }
-    }
-    struct Node* head = malloc(sizeof(struct Node));
+    char* buffer = malloc(sizeof(char) * 27);
+    struct Node* root = malloc(sizeof(struct Node));
     load_words("sowpods.txt", head);
-    get_anagrams(head, tiles, unique_tiles, buffer, 0);
+    get_anagrams(root, tiles, buffer, 0);
   }
   return 0;
 }
